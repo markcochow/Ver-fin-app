@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Categories</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="top-bar">
+    <div class="nav-links">
+        <a href="/index.html">Home</a>
+    </div>
+</div>
+
+<div class="container">
+
+<h1>Categories Summary</h1>
+
+<div class="table-box">
+<table id="categoriesTable">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Total Income</th>
+            <th>Total Expense</th>
+            <th>Net</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+// --------------------------------------------------
+// Load categories + compute totals
+// --------------------------------------------------
+async function loadCategorySummary() {
+    // 1. Load all categories
+    const catRes = await fetch("/api/categories");
+    const catData = await catRes.json();
+    const categories = catData.categories || [];
+
+    // 2. Load ALL transactions (no month filter)
+    const txnRes = await fetch("/api/other?start=2000-01&end=2099-12");
+    const txnData = await txnRes.json();
+    const transactions = txnData.transactions || [];
+
+    // 3. Build summary map
+    const summary = {};
+
+    categories.forEach(c => {
+        summary[c.name] = { income: 0, expense: 0 };
+    });
+
+    transactions

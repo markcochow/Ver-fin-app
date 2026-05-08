@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Transaction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="top-bar">
+    <div class="nav-links">
+        <a href="/index.html">Home</a>
+    </div>
+</div>
+
+<div class="container">
+
+<h1>Edit Transaction</h1>
+
+<div class="form-box">
+
+<form id="editForm">
+
+    <label>Date</label>
+    <input type="date" name="date" id="dateInput" required>
+
+    <label>Category</label>
+    <select name="category" id="categorySelect"></select>
+
+    <label>Type</label>
+    <select name="type" id="typeSelect">
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+    </select>
+
+    <label>Amount</label>
+    <input type="number" step="0.01" name="amount" id="amountInput" required>
+
+    <label>Notes</label>
+    <input type="text" name="notes" id="notesInput">
+
+    <button type="submit" class="btn">Update</button>
+
+</form>
+
+</div>
+
+</div>
+
+<script>
+// --------------------------------------------------
+// Get transaction ID from URL
+// --------------------------------------------------
+const urlParams = new URLSearchParams(window.location.search);
+const transactionId = urlParams.get("id");
+
+if (!transactionId) {
+    alert("Missing transaction ID");
+    window.location.href = "/index.html";
+}
+
+// --------------------------------------------------
+// Load categories
+// --------------------------------------------------
+async function loadCategories(selectedCategory) {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+
+    const select = document.getElementById("categorySelect");
+    select.innerHTML = "";
+
+    data.categories.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.name;
+        opt.textContent = c.name;
+        if (c.name === selectedCategory) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+// --------------------------------------------------
+// Load transaction details
+// --------------------------------------------------
+async function loadTransaction() {
+    // We fetch ALL transactions for the month, then filter by ID
+    // (Your simplified API does not have a single-item endpoint)
+    const month = new Date().toISOString().slice(0, 7);
+    const res = await fetch(`/api/transactions?month=${month}`);
+    const data = await res.json();
+
+    const t = data.transactions.find(x => x.id == transactionId);
+
+    if (!t) {
+        alert("Transaction not found");
+        window.location.href = "/index.html";
+        return;
+    }
+
+    // Fill form
+    document.getElementById("dateInput").value = t.date;
+    document.getElementById("amountInput").value = t.amount;
+    document.getElementById("notesInput").value = t.notes || "";
+    document.getElementById("typeSelect").value = t.type;
+
+    // Load categories with selected one
+    await loadCategories(t.category);
+}
+
+// --------------------------------------------------
+// Submit update
+// --------------------------------------------------
+document.getElementById("editForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+        date: document.getElementById("dateInput").value,
+        category: document.getElementById("categorySelect").value,
+        type: document.getElementById("typeSelect").value,
+        amount: parseFloat(document.getElementById("amountInput").value),
+        notes: document.getElementById("notesInput").value
+    };
+
+    await fetch(`/api/transactions/edit/${transactionId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    window.location.href = "/index.html";
+});
+
+// --------------------------------------------------
+// Init
+// --------------------------------------------------
+loadTransaction();
+</script>
+
+</body>
+</html>

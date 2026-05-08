@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Other Transactions</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="top-bar">
+    <div class="nav-links">
+        <a href="/index.html">Home</a>
+    </div>
+</div>
+
+<div class="container">
+
+<h1>Other Transactions</h1>
+
+<form id="filterForm">
+    <label>Start Month</label>
+    <input type="month" id="startMonth">
+
+    <label>End Month</label>
+    <input type="month" id="endMonth">
+
+    <button type="submit">Apply</button>
+</form>
+
+<div class="summary-cards">
+    <div class="card income">
+        <h3>Income</h3>
+        <p id="incomeValue">0</p>
+    </div>
+
+    <div class="card expense">
+        <h3>Expense</h3>
+        <p id="expenseValue">0</p>
+    </div>
+
+    <div class="card balance">
+        <h3>Balance</h3>
+        <p id="balanceValue">0</p>
+    </div>
+</div>
+
+<div class="table-box">
+<table id="transactionsTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+// --------------------------------------------------
+// Helpers
+// --------------------------------------------------
+function getCurrentMonth() {
+    return new Date().toISOString().slice(0, 7);
+}
+
+function getDefaultStartMonth() {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 2);
+    return d.toISOString().slice(0, 7);
+}
+
+// --------------------------------------------------
+// Load transactions for range
+// --------------------------------------------------
+async function loadTransactions() {
+    const start = document.getElementById("startMonth").value;
+    const end = document.getElementById("endMonth").value;
+
+    const res = await fetch(`/api/other?start=${start}&end=${end}`);
+    const data = await res.json();
+
+    const transactions = data.transactions || [];
+
+    // Summary
+    let income = 0;
+    let expense = 0;
+
+    transactions.forEach(t => {
+        if (t.type === "income") income += t.amount;
+        else expense += t.amount;
+    });
+
+    document.getElementById("incomeValue").textContent = income.toFixed(2);
+    document.getElementById("expenseValue").textContent = expense.toFixed(2);
+    document.getElementById("balanceValue").textContent = (income - expense).toFixed(2);
+
+    // Table
+    const tbody = document.querySelector("#transactionsTable tbody");
+    tbody.innerHTML = "";
+
+    transactions.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${t.date}</td>
+            <td>${t.category}</td>
+            <td>${t.type}</td>
+            <td>${t.amount}</td>
+            <td>${t.notes || ""}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --------------------------------------------------
+// Form handler
+// --------------------------------------------------
+document.getElementById("filterForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    loadTransactions();
+});
+
+// --------------------------------------------------
+// Init
+// --------------------------------------------------
+document.getElementById("startMonth").value = getDefaultStartMonth();
+document.getElementById("endMonth").value = getCurrentMonth();
+
+loadTransactions();
+</script>
+
+</body>
+</html>

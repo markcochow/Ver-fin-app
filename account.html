@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="top-bar">
+    <div class="nav-links">
+        <a href="/index.html">Home</a>
+    </div>
+</div>
+
+<div class="container">
+
+<h1>Account Balance</h1>
+
+<div class="card balance">
+    <h3>Total Balance</h3>
+    <p id="balanceValue">Loading...</p>
+</div>
+
+</div>
+
+<script>
+// --------------------------------------------------
+// Load account balance
+// --------------------------------------------------
+async function loadBalance() {
+    const res = await fetch("/api/account");
+    const data = await res.json();
+
+    document.getElementById("balanceValue").textContent =
+        data.balance.toFixed(2);
+}
+
+// --------------------------------------------------
+// Init
+// --------------------------------------------------
+loadBalance();
+</script>
+
+</body>
+</html>
