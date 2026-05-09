@@ -4,7 +4,4 @@
       "runtime": "nodejs18.x"
     }
   }
-    "static": {
-    "directory": "static"
-    }
 }
